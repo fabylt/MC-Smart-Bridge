@@ -1,0 +1,40 @@
+# /etc/systemd/system/mc-bridge.service
+# Servizio systemd per Oracle Cloud VM (Ubuntu / Oracle Linux — ARM64 Ampere A1 o x86_64)
+#
+# Installazione:
+#   sudo cp deploy/mc-bridge.service /etc/systemd/system/mc-bridge.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now mc-bridge
+#   sudo journalctl -u mc-bridge -f
+
+[Unit]
+Description=MC Smart Bridge — Convertitore Ricette Monsieur Cuisine Smart
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/mc-smart-bridge
+Environment=NODE_ENV=production
+Environment=PORT=8000
+EnvironmentFile=-/opt/mc-smart-bridge/.env
+
+# Avvio server Express + frontend compilato (npm run build eseguito in fase di deploy)
+ExecStart=/usr/bin/npx tsx /opt/mc-smart-bridge/server.ts
+
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=mc-bridge
+
+# Hardening leggero compatibile con scrittura in ./data e ./.env
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/mc-smart-bridge/data /opt/mc-smart-bridge/.env
+
+[Install]
+WantedBy=multi-user.target

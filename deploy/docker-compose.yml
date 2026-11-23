@@ -1,0 +1,21 @@
+# Alternativa containerizzata multi-arch (linux/arm64 & linux/amd64) per Oracle Cloud VM
+services:
+  mc-bridge:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: mc-smart-bridge
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      - NODE_ENV=production
+      - PORT=8000
+    volumes:
+      - ../data:/app/data
+      - ../.env:/app/.env
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
